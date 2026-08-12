@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathFinder — Interactive Dijkstra's Algorithm Visualizer</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="logo">
+            <h1>PathFinder</h1>
+            <span class="subtitle">Interactive Dijkstra's Algorithm Visualizer</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#visualizer">Visualizer</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#complexity">Complexity</a>
+            <a href="#about">About</a>
+        </nav>
+        <div class="theme-toggle">
+            <button id="theme-toggle-btn" class="btn-icon">🌓</button>
+        </div>
+    </header>
+
+    <main id="visualizer" class="dashboard">
+        <!-- Left Panel: Graph Canvas & Controls -->
+        <section class="panel left-panel">
+            <div class="toolbar">
+                <div class="tool-group">
+                    <button class="btn active" id="tool-select" title="Select / Move Node">Cursor</button>
+                    <button class="btn" id="tool-add-node" title="Add Node">Add Node</button>
+                    <button class="btn" id="tool-add-edge" title="Add Edge">Add Edge</button>
+                    <button class="btn danger" id="tool-delete" title="Delete Node/Edge">Delete</button>
+                </div>
+                <div class="tool-group">
+                    <button class="btn" id="btn-clear">Clear Graph</button>
+                    <select id="example-graphs" class="select-dropdown">
+                        <option value="" disabled selected>Load Example</option>
+                        <option value="example1">Example 1 (Simple)</option>
+                        <option value="example2">Example 2 (Complex)</option>
+                        <option value="example3">Example 3 (Multiple Paths)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="graph-canvas"></canvas>
+                
+                <div class="node-selectors">
+                    <div class="selector-group">
+                        <label for="source-node">Source:</label>
+                        <select id="source-node" class="select-dropdown"></select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="dest-node">Destination:</label>
+                        <select id="dest-node" class="select-dropdown">
+                            <option value="any">Any (Full Dijkstra)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="playback-controls">
+                <button class="btn primary" id="btn-run">▶ Run Dijkstra</button>
+                <button class="btn" id="btn-step" disabled>⏭ Step Forward</button>
+                <button class="btn" id="btn-pause" disabled>⏸ Pause</button>
+                <button class="btn" id="btn-reset">↻ Reset</button>
+                <div class="speed-control">
+                    <label>Slow</label>
+                    <input type="range" id="speed-slider" min="1" max="100" value="50">
+                    <label>Fast</label>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                Status: <span id="algo-status">Ready</span>
+            </div>
+        </section>
+
+        <!-- Right Panel: Info & Tables -->
+        <section class="panel right-panel">
+            
+            <!-- Explanation Panel -->
+            <div class="card explanation-card">
+                <h2>Current Algorithm Step</h2>
+                <div id="explanation-text" class="explanation-box">
+                    Algorithm is ready. Select a source node and click Run.
+                </div>
+                <div id="why-happen-box" class="why-box hidden">
+                    <strong>Why did this happen?</strong>
+                    <p id="why-text"></p>
+                </div>
+            </div>
+
+            <!-- Distance Table -->
+            <div class="card table-card">
+                <h2>Distance Table</h2>
+                <div class="table-container">
+                    <table id="distance-table">
+                        <thead>
+                            <tr>
+                                <th>Vertex</th>
+                                <th>Distance</th>
+                                <th>Previous</th>
+                                <th>Visited</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pseudocode -->
+            <div class="card pseudocode-card">
+                <h2>Pseudocode</h2>
+                <pre><code id="pseudocode-block" class="language-pseudocode">
+<span id="line-1">Dijkstra(G, source):</span>
+<span id="line-2">    for each vertex v:</span>
+<span id="line-3">        distance[v] = infinity</span>
+<span id="line-4">        previous[v] = NULL</span>
+<span id="line-5"></span>
+<span id="line-6">    distance[source] = 0</span>
+<span id="line-7"></span>
+<span id="line-8">    while there are unvisited vertices:</span>
+<span id="line-9">        u = vertex with minimum distance</span>
+<span id="line-10">        mark u as visited</span>
+<span id="line-11"></span>
+<span id="line-12">        for each neighbor v of u:</span>
+<span id="line-13">            newDistance = distance[u] + weight(u, v)</span>
+<span id="line-14">            if newDistance < distance[v]:</span>
+<span id="line-15">                distance[v] = newDistance</span>
+<span id="line-16">                previous[v] = u</span>
+<span id="line-17"></span>
+<span id="line-18">    return distance, previous</span>
+</code></pre>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="card stats-card hidden" id="stats-panel">
+                <h2>Results</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="label">Shortest Distance</span>
+                        <span class="value" id="stat-distance">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Shortest Path</span>
+                        <span class="value" id="stat-path">-</span>
+                    </div>
+                </div>
+                <button class="btn" id="btn-show-path-details" style="margin-top:1rem; width:100%;">Show Path Details</button>
+                <div id="path-details" class="hidden"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <div class="content-sections">
+        <section id="how-it-works" class="info-section">
+            <h2>How Dijkstra's Algorithm Works</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <h3>Step 1 — Initialization</h3>
+                    <p>Set the source distance to 0 and all other node distances to infinity (∞).</p>
+                </div>
+                <div class="step-card">
+                    <h3>Step 2 — Select Minimum</h3>
+                    <p>Select the unvisited vertex with the smallest tentative distance.</p>
+                </div>
+                <div class="step-card">
+                    <h3>Step 3 — Relax Edges</h3>
+                    <p>Check all neighboring vertices. Calculate the distance to each neighbor through the current node. If this new distance is smaller than the known distance, update it (relax the edge).</p>
+                </div>
+                <div class="step-card">
+                    <h3>Step 4 — Mark Visited</h3>
+                    <p>Mark the current vertex as permanently processed (visited). It won't be checked again.</p>
+                </div>
+                <div class="step-card">
+                    <h3>Step 5 — Repeat</h3>
+                    <p>Repeat steps 2-4 until all reachable vertices are visited or the destination is reached.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="complexity" class="info-section">
+            <h2>Algorithm Complexity</h2>
+            <div class="complexity-cards">
+                <div class="comp-card">
+                    <h3>Time Complexity</h3>
+                    <p><strong>O(V²)</strong> using a simple array/matrix implementation.</p>
+                    <p><strong>O((V + E) log V)</strong> using a priority queue (min-heap).</p>
+                    <small>V = number of vertices, E = number of edges</small>
+                </div>
+                <div class="comp-card">
+                    <h3>Space Complexity</h3>
+                    <p><strong>O(V + E)</strong></p>
+                    <p>Required to store the graph (Adjacency List), distances array, and priority queue/visited set.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="info-section">
+            <h2>About Dijkstra</h2>
+            <div class="about-content">
+                <p>The algorithm was conceived by Dutch computer scientist <strong>Edsger W. Dijkstra</strong> in 1956 and published three years later.</p>
+                <p>It is one of the most famous algorithms in computer science, used in network routing protocols (like IS-IS and OSPF) and as a fundamental concept in graph theory and the Design and Analysis of Algorithms (DAA).</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal for weight input -->
+    <div id="weight-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Enter Edge Weight</h3>
+            <p>Dijkstra's algorithm only works with non-negative edge weights.</p>
+            <input type="number" id="edge-weight-input" min="0" step="1" placeholder="e.g., 5">
+            <div class="modal-actions">
+                <button class="btn" id="btn-cancel-weight">Cancel</button>
+                <button class="btn primary" id="btn-confirm-weight">Confirm</button>
+            </div>
+            <p id="weight-error" class="error-text hidden">Invalid weight. Must be a non-negative number.</p>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
