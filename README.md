@@ -11,6 +11,12 @@
 - **Code Execution Tracing:** A pseudocode panel highlights the exact line of the algorithm currently being executed.
 - **Prebuilt Examples:** Load simple or complex graph topologies with a single click.
 
+- ## 🎯 Key Objectives
+- Provide an intuitive way to understand Dijkstra's shortest path algorithm.
+- Visualize how nodes and edges are explored during algorithm execution.
+- Demonstrate distance updates and shortest-path selection step by step.
+- Help users understand graph data structures and priority queues through interaction.
+
 ## 🛠️ Technologies Used
 - **HTML5 Canvas:** For rendering the nodes, edges, and real-time path highlights.
 - **CSS3:** Responsive dashboard layout, dark theme, and control styling.
